@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(yt-dlp:*)",
+      "Bash(pyinstaller:*)",
+      "Bash(copy \"dist\\DescargadorVideos.exe\" \"C:\\Users\\ASUS\\Desktop\\DescargadorVideos.exe\")",
+      "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" NovaMickTools.sln /p:Configuration=Release /p:Platform=\"Any CPU\" /t:Rebuild)",
+      "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/MSBuild.exe\" NovaMickTools.sln /p:Configuration=Release /p:Platform=\"Any CPU\" /t:Rebuild /v:minimal)",
+      "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/MSBuild.exe\" NovaMickTools.sln -p:Configuration=Release -p:Platform=\"Any CPU\" -t:Rebuild)",
+      "Bash(git init:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

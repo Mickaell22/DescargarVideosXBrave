@@ -1,0 +1,20 @@
+# Build
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+
+# Historial local
+download_history.json
+
+# IDE
+.idea/
+.vscode/
