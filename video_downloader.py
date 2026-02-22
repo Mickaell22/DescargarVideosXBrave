@@ -2,6 +2,7 @@ import customtkinter as ctk
 import yt_dlp
 import threading
 import os
+import sys
 import json
 import subprocess
 from pathlib import Path
@@ -43,7 +44,7 @@ class VideoDownloaderApp:
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
 
-        self.download_path = r"C:\Users\ASUS\Downloads\MisVideos"
+        self.download_path = str(Path.home() / "Downloads" / "MisVideos")
         self.create_download_folder()
 
         self.is_downloading = False
@@ -72,12 +73,17 @@ class VideoDownloaderApp:
             self.path_entry.insert(0, folder)
 
     def open_download_folder(self):
-        """Abrir la carpeta de descargas en el explorador"""
+        """Abrir la carpeta de descargas en el explorador (multiplataforma)"""
         path = self.path_entry.get().strip() or self.download_path
-        if os.path.exists(path):
-            subprocess.Popen(f'explorer "{path}"')
-        else:
+        if not os.path.exists(path):
             messagebox.showwarning("Carpeta no encontrada", f"La carpeta no existe:\n{path}")
+            return
+        if sys.platform == "win32":
+            subprocess.Popen(["explorer", path])
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", path])
+        else:
+            subprocess.Popen(["xdg-open", path])
 
     # ─────────────────────────────────────────────
     #  Historial

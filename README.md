@@ -8,6 +8,8 @@
 ![yt-dlp](https://img.shields.io/badge/yt--dlp-latest-red?style=for-the-badge&logo=youtube&logoColor=white)
 ![CustomTkinter](https://img.shields.io/badge/CustomTkinter-GUI-green?style=for-the-badge)
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-compatible-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+![macOS](https://img.shields.io/badge/macOS-compatible-000000?style=for-the-badge&logo=apple&logoColor=white)
 
 </div>
 
@@ -65,6 +67,9 @@ pip install -r requirements.txt
 ```bash
 python video_downloader.py
 ```
+
+> **Linux:** Asegúrate de tener `xdg-utils` instalado (`sudo apt install xdg-utils`) para que el botón "Abrir carpeta" funcione.
+> **macOS:** No requiere dependencias adicionales.
 
 ---
 
