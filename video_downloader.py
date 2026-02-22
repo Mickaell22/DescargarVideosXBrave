@@ -1,5 +1,5 @@
-import customtkinter as ctk
-import yt_dlp
+# ── Imports ligeros primero ────────────────────────────────────────────────
+import tkinter as tk
 import threading
 import os
 import sys
@@ -9,6 +9,32 @@ from pathlib import Path
 from datetime import datetime
 import tkinter.messagebox as messagebox
 import tkinter.filedialog as filedialog
+
+
+# ── Splash inmediata (aparece antes de cargar los módulos pesados) ─────────
+def _show_splash():
+    s = tk.Tk()
+    s.overrideredirect(True)
+    s.configure(bg="#1c1c1c")
+    w, h = 380, 130
+    sw, sh = s.winfo_screenwidth(), s.winfo_screenheight()
+    s.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
+    s.attributes("-topmost", True)
+    tk.Label(s, text="🎬  Descargador de Videos",
+             bg="#1c1c1c", fg="white",
+             font=("Arial", 17, "bold")).pack(pady=(26, 6))
+    tk.Label(s, text="Iniciando, un momento...",
+             bg="#1c1c1c", fg="#888888",
+             font=("Arial", 10)).pack()
+    s.update()
+    return s
+
+
+_splash_win = _show_splash()
+
+# ── Imports pesados (se cargan mientras la splash está visible) ────────────
+import customtkinter as ctk  # noqa: E402
+import yt_dlp                # noqa: E402
 
 
 HISTORY_FILE = Path(__file__).parent / "download_history.json"
@@ -54,6 +80,9 @@ class VideoDownloaderApp:
         self.history = self.load_history()
 
         self.create_widgets()
+
+        # Cerrar splash cuando la ventana principal está lista
+        _splash_win.destroy()
 
     # ─────────────────────────────────────────────
     #  Carpeta & paths
@@ -134,7 +163,7 @@ class VideoDownloaderApp:
             for h in self.history[:20]:
                 dur = ""
                 if h.get("duration"):
-                    m, s = divmod(h["duration"], 60)
+                    m, s = divmod(int(h["duration"]), 60)
                     dur = f"  [{m}m{s:02d}s]"
                 self.history_text.insert(
                     "end",
@@ -199,21 +228,23 @@ class VideoDownloaderApp:
             messagebox.showerror("Error", f"No se pudo crear la carpeta: {e}")
             return
 
+        # Leer StringVars en el hilo principal antes de pasarlos al hilo de cola
+        quality     = self.quality_var.get()
+        use_cookies = self.use_cookies_var.get()
+
         self.queue_running = True
         self.start_queue_btn.configure(state="disabled", text="Ejecutando cola...")
-        thread = threading.Thread(target=self._run_queue, args=(output_path,), daemon=True)
+        thread = threading.Thread(target=self._run_queue, args=(output_path, quality, use_cookies), daemon=True)
         thread.start()
 
-    def _run_queue(self, output_path):
+    def _run_queue(self, output_path, quality, use_cookies):
         total = len(self.download_queue)
         self.add_log(f"\n▶ Iniciando cola: {total} video(s)\n")
 
         while self.download_queue:
             url = self.download_queue[0]
             self.add_log(f"\n[Cola] {len(self.download_queue)} restante(s) — {url[:60]}")
-            self.download_video(url, output_path,
-                                self.quality_var.get(),
-                                self.use_cookies_var.get())
+            self.download_video(url, output_path, quality, use_cookies)
             # Quitar de la cola solo si descargó (o falló)
             if self.download_queue and self.download_queue[0] == url:
                 self.download_queue.pop(0)
@@ -260,7 +291,7 @@ class VideoDownloaderApp:
 
             dur_str = ""
             if duration:
-                m, s = divmod(duration, 60)
+                m, s = divmod(int(duration), 60)
                 dur_str = f"{m}m {s:02d}s"
 
             lines = [
@@ -343,7 +374,7 @@ class VideoDownloaderApp:
 
         # Cookies
         ctk.CTkLabel(opts_frame, text="Cookies de Brave:").pack(side="left", padx=(0, 4))
-        self.use_cookies_var = ctk.StringVar(value="si")
+        self.use_cookies_var = ctk.StringVar(value="no")
         ctk.CTkOptionMenu(
             opts_frame,
             values=["si", "no"],
@@ -486,9 +517,10 @@ class VideoDownloaderApp:
     # ─────────────────────────────────────────────
 
     def add_log(self, message):
-        self.log_text.insert("end", f"{message}\n")
-        self.log_text.see("end")
-        self.window.update()
+        def _update():
+            self.log_text.insert("end", f"{message}\n")
+            self.log_text.see("end")
+        self.window.after(0, _update)
 
     # ─────────────────────────────────────────────
     #  Detección de plataforma
@@ -515,11 +547,12 @@ class VideoDownloaderApp:
     def progress_hook(self, d):
         if d['status'] == 'downloading':
             if 'downloaded_bytes' in d and 'total_bytes' in d:
-                self.progress_bar.set(d['downloaded_bytes'] / d['total_bytes'])
+                pct = d['downloaded_bytes'] / d['total_bytes']
+                self.window.after(0, lambda p=pct: self.progress_bar.set(p))
             elif '_percent_str' in d:
                 try:
                     pct = float(d['_percent_str'].strip().replace('%', '')) / 100
-                    self.progress_bar.set(pct)
+                    self.window.after(0, lambda p=pct: self.progress_bar.set(p))
                 except Exception:
                     pass
 
@@ -528,7 +561,7 @@ class VideoDownloaderApp:
                 self.add_log(f"Descargando: {d['_percent_str']} - Velocidad: {speed}")
 
         elif d['status'] == 'finished':
-            self.progress_bar.set(1)
+            self.window.after(0, lambda: self.progress_bar.set(1))
             self.add_log("Descarga completada, procesando...")
 
     # ─────────────────────────────────────────────
@@ -603,12 +636,12 @@ class VideoDownloaderApp:
                     self.add_log(f"  Título: {title}")
                     self.add_log(f"  Autor:  {uploader}")
                     if duration:
-                        m, s = divmod(duration, 60)
+                        m, s = divmod(int(duration), 60)
                         self.add_log(f"  Duración: {m}m {s:02d}s")
                     self.add_log(f"  Guardado en: {output_path}")
 
                     # Guardar en historial
-                    self.add_to_history(url, title, uploader, duration)
+                    self.window.after(0, lambda: self.add_to_history(url, title, uploader, duration))
 
                     messagebox.showinfo(
                         "¡Éxito!",
@@ -659,8 +692,10 @@ class VideoDownloaderApp:
 
         finally:
             self.is_downloading = False
-            self.download_button.configure(state="normal", text="⬇ Descargar Video")
-            self.progress_bar.set(0)
+            self.window.after(0, lambda: self.download_button.configure(
+                state="normal", text="⬇ Descargar Video"
+            ))
+            self.window.after(0, lambda: self.progress_bar.set(0))
 
     def start_download(self):
         if self.is_downloading:

@@ -9,7 +9,13 @@
       "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" NovaMickTools.sln /p:Configuration=Release /p:Platform=\"Any CPU\" /t:Rebuild)",
       "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/MSBuild.exe\" NovaMickTools.sln /p:Configuration=Release /p:Platform=\"Any CPU\" /t:Rebuild /v:minimal)",
       "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/MSBuild.exe\" NovaMickTools.sln -p:Configuration=Release -p:Platform=\"Any CPU\" -t:Rebuild)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "Bash(python:*)",
+      "Bash(powershell -Command \":*)",
+      "Bash(powershell -Command:*)",
+      "Bash(taskkill:*)",
+      "Bash(handle64.exe \"DescargadorVideos.exe\")",
+      "Bash(tasklist:*)"
     ],
     "deny": [],
     "ask": []
