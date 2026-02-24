@@ -244,7 +244,7 @@ class VideoDownloaderApp:
         while self.download_queue:
             url = self.download_queue[0]
             self.add_log(f"\n[Cola] {len(self.download_queue)} restante(s) — {url[:60]}")
-            self.download_video(url, output_path, quality, use_cookies)
+            self.download_video(url, output_path, quality, use_cookies, silent=True)
             # Quitar de la cola solo si descargó (o falló)
             if self.download_queue and self.download_queue[0] == url:
                 self.download_queue.pop(0)
@@ -568,7 +568,7 @@ class VideoDownloaderApp:
     #  Descarga
     # ─────────────────────────────────────────────
 
-    def download_video(self, url, output_path, quality, use_cookies):
+    def download_video(self, url, output_path, quality, use_cookies, silent=False):
         try:
             plataforma = self.detectar_plataforma(url)
             self.add_log(f"Iniciando descarga desde: {url}")
@@ -643,10 +643,11 @@ class VideoDownloaderApp:
                     # Guardar en historial
                     self.window.after(0, lambda: self.add_to_history(url, title, uploader, duration))
 
-                    messagebox.showinfo(
-                        "¡Éxito!",
-                        f"Video descargado correctamente:\n\n{title}\n\nGuardado en:\n{output_path}"
-                    )
+                    if not silent:
+                        messagebox.showinfo(
+                            "¡Éxito!",
+                            f"Video descargado correctamente:\n\n{title}\n\nGuardado en:\n{output_path}"
+                        )
                 else:
                     raise Exception("No se pudo extraer información del video")
 
@@ -662,33 +663,37 @@ class VideoDownloaderApp:
                 self.add_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 self.add_log("1. CIERRA completamente Brave")
                 self.add_log("2. Intenta descargar de nuevo")
-                messagebox.showerror(
-                    "Error de Cookies",
-                    "El navegador Brave está abierto y bloqueó el acceso a las cookies.\n\n"
-                    "SOLUCIÓN:\n"
-                    "1. Cierra Brave completamente\n"
-                    "2. Intenta de nuevo\n\n"
-                    "O cambia 'Usar cookies' a 'no'"
-                )
+                if not silent:
+                    messagebox.showerror(
+                        "Error de Cookies",
+                        "El navegador Brave está abierto y bloqueó el acceso a las cookies.\n\n"
+                        "SOLUCIÓN:\n"
+                        "1. Cierra Brave completamente\n"
+                        "2. Intenta de nuevo\n\n"
+                        "O cambia 'Usar cookies' a 'no'"
+                    )
             elif "Cannot parse data" in error_msg or "Unsupported URL" in error_msg:
                 self.add_log("")
                 self.add_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 self.add_log("⚠️  NO SE PUEDE ACCEDER AL VIDEO")
                 self.add_log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 self.add_log("• Video privado, URL inválida, o necesitas autenticación")
-                messagebox.showerror(
-                    "Video no accesible",
-                    "No se puede acceder a este video.\n\n"
-                    "Verifica que:\n"
-                    "• El video sea público O\n"
-                    "• Estés usando cookies con sesión iniciada"
-                )
+                if not silent:
+                    messagebox.showerror(
+                        "Video no accesible",
+                        "No se puede acceder a este video.\n\n"
+                        "Verifica que:\n"
+                        "• El video sea público O\n"
+                        "• Estés usando cookies con sesión iniciada"
+                    )
             else:
-                messagebox.showerror("Error", f"Error al descargar:\n\n{error_msg}")
+                if not silent:
+                    messagebox.showerror("Error", f"Error al descargar:\n\n{error_msg}")
 
         except Exception as e:
             self.add_log(f"✗ Error inesperado: {e}")
-            messagebox.showerror("Error", f"Error inesperado:\n\n{e}")
+            if not silent:
+                messagebox.showerror("Error", f"Error inesperado:\n\n{e}")
 
         finally:
             self.is_downloading = False
