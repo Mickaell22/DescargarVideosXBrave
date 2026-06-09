@@ -52,8 +52,8 @@
 ### 1. Clona el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/DescargarVideos.git
-cd DescargarVideos
+git clone https://github.com/Mickaell22/DescargarVideosXBrave.git
+cd DescargarVideosXBrave
 ```
 
 ### 2. Instala las dependencias
